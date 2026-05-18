@@ -25,6 +25,7 @@ import { z } from 'zod'
 
 import { joinNonEmptyString } from '@/utils'
 import {
+  EntityIdSchema,
   KeywordsSchema,
   LevelOptionSchema,
   multilingualString,
@@ -48,7 +49,9 @@ export const SkillItemSchema = z.object({
   name: multilingualString(SkillNameSchema),
 
   // optional fields
+  id: EntityIdSchema.nullish(),
   keywords: nullifySchema(KeywordsSchema),
+  relatedTo: z.array(z.string()).nullish(),
 })
 
 /**

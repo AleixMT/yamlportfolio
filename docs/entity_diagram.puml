@@ -1,0 +1,201 @@
+@startuml yamlresume-entity-diagram
+title yamlresume — Entity Relationship Diagram
+
+hide empty methods
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FAFAFA
+  BorderColor #555555
+  HeaderBackgroundColor #4A90D9
+  HeaderFontColor #FFFFFF
+  FontSize 11
+}
+skinparam note {
+  BackgroundColor #FFFDE7
+  BorderColor #F9A825
+}
+skinparam arrow {
+  Color #333333
+}
+
+' ── Core entities (all have optional id) ─────────────────────────────────────
+
+class WorkItem {
+  +id?: string
+  --required--
+  +name: string
+  +position: MultilingualString
+  +startDate: string
+  +summary: MultilingualString
+  --optional--
+  +endDate?: string
+  +keywords?: string[]
+  +url?: string
+}
+
+class VolunteerItem {
+  +id?: string
+  --required--
+  +organization: string
+  +position: MultilingualString
+  +startDate: string
+  +summary: MultilingualString
+  --optional--
+  +endDate?: string
+  +url?: string
+}
+
+class AwardItem {
+  +id?: string
+  --required--
+  +awarder: string
+  +title: MultilingualString
+  --optional--
+  +date?: string
+  +summary?: MultilingualString
+}
+
+class CertificateItem {
+  +id?: string
+  --required--
+  +issuer: string
+  +name: MultilingualString
+  --optional--
+  +date?: string
+  +url?: string
+}
+
+class EducationItem {
+  +id?: string
+  --required--
+  +area: MultilingualString
+  +institution: string
+  +degree: Degree
+  +startDate: string
+  --optional--
+  +courses?: string[]
+  +endDate?: string
+  +score?: string
+  +summary?: MultilingualString
+  +url?: string
+}
+
+class PublicationItem {
+  +id?: string
+  --required--
+  +name: MultilingualString
+  +publisher: string
+  --optional--
+  +releaseDate?: string
+  +summary?: MultilingualString
+  +url?: string
+}
+
+class ReferenceItem {
+  +id?: string
+  --required--
+  +name: string
+  +summary: MultilingualString
+  --optional--
+  +email?: string
+  +phone?: string
+  +relationship?: string
+}
+
+' ── Entities with relatedTo cross-reference ──────────────────────────────────
+
+class ProjectItem {
+  +id?: string
+  --required--
+  +name: MultilingualString
+  +startDate: string
+  +summary: MultilingualString
+  --optional--
+  +description?: MultilingualString
+  +endDate?: string
+  +keywords?: string[]
+  +url?: string
+  +relatedTo?: string[]
+  --computed--
+  +computed.relatedTo?: RelatedEntity[]
+}
+
+class SkillItem {
+  +id?: string
+  --required--
+  +level: Level
+  +name: MultilingualString
+  --optional--
+  +keywords?: string[]
+  +relatedTo?: string[]
+  --computed--
+  +computed.relatedTo?: RelatedEntity[]
+}
+
+' ── RelatedEntity discriminated union ────────────────────────────────────────
+
+class RelatedEntity <<union>> {
+  +section: SectionName
+  +item: EntityItem
+}
+
+note right of RelatedEntity
+  section is one of:
+  'awards' | 'certificates' |
+  'education' | 'projects' |
+  'publications' | 'references' |
+  'skills' | 'volunteer' | 'work'
+end note
+
+' ── relatedTo relationships (Project/Skill → any entity via string ID) ────────
+
+ProjectItem "0..1" --> "0..*" RelatedEntity : relatedTo\n(resolved at preprocess)
+SkillItem   "0..1" --> "0..*" RelatedEntity : relatedTo\n(resolved at preprocess)
+
+RelatedEntity ..> WorkItem        : section='work'
+RelatedEntity ..> VolunteerItem   : section='volunteer'
+RelatedEntity ..> AwardItem       : section='awards'
+RelatedEntity ..> CertificateItem : section='certificates'
+RelatedEntity ..> EducationItem   : section='education'
+RelatedEntity ..> PublicationItem : section='publications'
+RelatedEntity ..> ReferenceItem   : section='references'
+RelatedEntity ..> ProjectItem     : section='projects'
+RelatedEntity ..> SkillItem       : section='skills'
+
+' ── Top-level Content container ──────────────────────────────────────────────
+
+class Content {
+  +basics: BasicsItem
+  +education: EducationItem[]
+  --optional--
+  +awards?: AwardItem[]
+  +certificates?: CertificateItem[]
+  +interests?: InterestItem[]
+  +languages?: LanguageItem[]
+  +location?: LocationItem
+  +profiles?: ProfileItem[]
+  +projects?: ProjectItem[]
+  +publications?: PublicationItem[]
+  +references?: ReferenceItem[]
+  +skills?: SkillItem[]
+  +volunteer?: VolunteerItem[]
+  +work?: WorkItem[]
+}
+
+Content "1" *-- "0..*" WorkItem
+Content "1" *-- "0..*" VolunteerItem
+Content "1" *-- "0..*" AwardItem
+Content "1" *-- "0..*" CertificateItem
+Content "1" *-- "0..*" EducationItem
+Content "1" *-- "0..*" PublicationItem
+Content "1" *-- "0..*" ReferenceItem
+Content "1" *-- "0..*" ProjectItem
+Content "1" *-- "0..*" SkillItem
+
+note bottom of Content
+  Only 'basics' and 'education' are required.
+  All other sections are optional.
+  IDs must be unique across the entire resume.
+end note
+
+@enduml

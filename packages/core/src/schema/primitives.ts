@@ -449,6 +449,24 @@ export const multilingualString = <T extends z.ZodType>(schema: T) =>
   z.union([schema, z.record(z.string(), z.string())])
 
 /**
+ * A zod schema for an entity ID.
+ *
+ * Entity IDs are optional, kebab-case identifiers that allow any resume section
+ * item to be referenced from `relatedTo` fields on projects and skills.
+ */
+export const EntityIdSchema = z
+  .string()
+  .regex(/^[a-z0-9-]+$/, {
+    message: 'id must contain only lowercase letters, digits, and hyphens.',
+  })
+  .meta({
+    title: 'ID',
+    description:
+      'A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).',
+    examples: ['my-project', 'typescript', 'acme-work-2023'],
+  })
+
+/**
  * A zod schema for a url.
  */
 export const UrlSchema = z

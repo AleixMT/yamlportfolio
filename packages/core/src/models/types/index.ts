@@ -35,6 +35,7 @@ export type {
   Projects,
   Publications,
   References,
+  RelatedEntity,
   ResumeItem,
   Skills,
   Volunteer,

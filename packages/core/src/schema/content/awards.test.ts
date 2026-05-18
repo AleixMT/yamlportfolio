@@ -76,6 +76,9 @@ describe('AwardsSchema', () => {
       {
         awards: [{ ...baseAwardItem, date, summary }],
       },
+      {
+        awards: [{ ...baseAwardItem, id: 'my-award', date, summary }],
+      },
       ...getNullishTestCases(AwardItemSchema, baseAwardItem).map(
         (testCase) => ({
           awards: [testCase],
@@ -88,6 +91,33 @@ describe('AwardsSchema', () => {
         awards,
       })
     }
+  })
+
+  it('should reject an invalid id format', () => {
+    validateZodErrors(
+      AwardsSchema,
+      { awards: [{ awarder, title, id: 'INVALID_ID' }] },
+      {
+        errors: [],
+        properties: {
+          awards: {
+            errors: [],
+            items: [
+              {
+                errors: [],
+                properties: {
+                  id: {
+                    errors: [
+                      'id must contain only lowercase letters, digits, and hyphens.',
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      }
+    )
   })
 
   it('should throw an error if the awards are invalid', () => {

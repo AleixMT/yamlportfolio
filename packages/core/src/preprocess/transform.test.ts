@@ -23,7 +23,7 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { LatexCodeGenerator, MarkdownParser } from '@/compiler'
 import {
@@ -47,6 +47,7 @@ import {
   normalizeResumeContentSections,
   replaceBlankLinesWithPercent,
   resolveMultilingualStrings,
+  resolveRelatedRefs,
   transformDate,
   transformEducationCourses,
   transformEducationDegreeAreaAndScore,
@@ -1574,5 +1575,217 @@ describe(resolveMultilingualStrings, () => {
     expect(resume.content.basics.summary).toEqual(
       original.content.basics.summary
     )
+  })
+})
+
+describe(resolveRelatedRefs, () => {
+  const baseResume: Resume = {
+    content: {
+      basics: { name: 'Test User' },
+      education: [
+        {
+          id: 'cs-degree',
+          area: 'Computer Science',
+          institution: 'State University',
+          degree: 'Bachelor',
+          startDate: '2016-09',
+        },
+      ],
+      work: [
+        {
+          id: 'acme-work',
+          name: 'Acme Corp',
+          position: 'Engineer',
+          startDate: '2022-01',
+          summary: 'Full-stack development.',
+        },
+      ],
+      awards: [
+        {
+          id: 'open-source-award',
+          awarder: 'Linux Foundation',
+          title: 'Open Source Contributor',
+        },
+      ],
+      skills: [
+        {
+          id: 'typescript',
+          name: 'TypeScript',
+          level: 'Expert',
+          relatedTo: ['my-project', 'acme-work'],
+        },
+      ],
+      projects: [
+        {
+          id: 'my-project',
+          name: 'My Project',
+          startDate: '2024-01',
+          summary: 'A great project.',
+          relatedTo: ['acme-work', 'cs-degree', 'open-source-award'],
+        },
+      ],
+    },
+  }
+
+  it('should inject computed.relatedTo on projects with resolved entities', () => {
+    const result = resolveRelatedRefs(baseResume)
+    const project = result.content.projects?.[0]
+
+    expect(project?.computed?.relatedTo).toHaveLength(3)
+    expect(project?.computed?.relatedTo?.[0]).toMatchObject({
+      section: 'work',
+      item: expect.objectContaining({ id: 'acme-work' }),
+    })
+    expect(project?.computed?.relatedTo?.[1]).toMatchObject({
+      section: 'education',
+      item: expect.objectContaining({ id: 'cs-degree' }),
+    })
+    expect(project?.computed?.relatedTo?.[2]).toMatchObject({
+      section: 'awards',
+      item: expect.objectContaining({ id: 'open-source-award' }),
+    })
+  })
+
+  it('should inject computed.relatedTo on skills with resolved entities', () => {
+    const result = resolveRelatedRefs(baseResume)
+    const skill = result.content.skills?.[0]
+
+    expect(skill?.computed?.relatedTo).toHaveLength(2)
+    expect(skill?.computed?.relatedTo?.[0]).toMatchObject({
+      section: 'projects',
+      item: expect.objectContaining({ id: 'my-project' }),
+    })
+    expect(skill?.computed?.relatedTo?.[1]).toMatchObject({
+      section: 'work',
+      item: expect.objectContaining({ id: 'acme-work' }),
+    })
+  })
+
+  it('should return empty relatedTo when no relatedTo field is set', () => {
+    const resume: Resume = {
+      content: {
+        basics: { name: 'Test User' },
+        education: [
+          {
+            area: 'Arts',
+            institution: 'University',
+            degree: 'Bachelor',
+            startDate: '2018',
+          },
+        ],
+        projects: [
+          {
+            name: 'Side Project',
+            startDate: '2024-01',
+            summary: 'A side project with no cross-references.',
+          },
+        ],
+      },
+    }
+
+    const result = resolveRelatedRefs(resume)
+    expect(result.content.projects?.[0]?.computed?.relatedTo).toEqual([])
+  })
+
+  it('should warn and skip duplicate entity ids', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const resume: Resume = {
+      content: {
+        basics: { name: 'Test' },
+        education: [
+          {
+            area: 'CS',
+            institution: 'Uni',
+            degree: 'Bachelor',
+            startDate: '2020',
+          },
+        ],
+        work: [
+          {
+            id: 'dup-id',
+            name: 'Company A',
+            position: 'Dev',
+            startDate: '2022',
+            summary: 'First.',
+          },
+          {
+            id: 'dup-id',
+            name: 'Company B',
+            position: 'Dev',
+            startDate: '2023',
+            summary: 'Second.',
+          },
+        ],
+        projects: [
+          {
+            name: 'Test Project',
+            startDate: '2024-01',
+            summary: 'A project referencing a dup id.',
+            relatedTo: ['dup-id'],
+          },
+        ],
+      },
+    }
+
+    const result = resolveRelatedRefs(resume)
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Duplicate entity id "dup-id"')
+    )
+    // Should resolve to the first occurrence
+    expect(result.content.projects?.[0]?.computed?.relatedTo).toHaveLength(1)
+    expect(
+      result.content.projects?.[0]?.computed?.relatedTo?.[0]
+    ).toMatchObject({
+      section: 'work',
+      item: expect.objectContaining({ name: 'Company A' }),
+    })
+
+    warnSpy.mockRestore()
+  })
+
+  it('should warn and skip unresolved relatedTo ids', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const resume: Resume = {
+      content: {
+        basics: { name: 'Test' },
+        education: [
+          {
+            area: 'CS',
+            institution: 'Uni',
+            degree: 'Bachelor',
+            startDate: '2020',
+          },
+        ],
+        projects: [
+          {
+            name: 'My Project',
+            startDate: '2024-01',
+            summary: 'References a missing id.',
+            relatedTo: ['does-not-exist'],
+          },
+        ],
+      },
+    }
+
+    const result = resolveRelatedRefs(resume)
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"does-not-exist"')
+    )
+    expect(result.content.projects?.[0]?.computed?.relatedTo).toHaveLength(0)
+
+    warnSpy.mockRestore()
+  })
+
+  it('should not mutate the original resume', () => {
+    const original = cloneDeep(baseResume)
+    resolveRelatedRefs(baseResume)
+
+    expect(baseResume.content.projects?.[0]?.computed).toBeUndefined()
+    expect(baseResume.content.skills?.[0]?.computed).toBeUndefined()
+    expect(baseResume).toEqual(original)
   })
 })

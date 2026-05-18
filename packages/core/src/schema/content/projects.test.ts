@@ -89,6 +89,18 @@ describe('ProjectsSchema', () => {
           },
         ],
       },
+      {
+        projects: [{ ...baseProjectItem, id: 'my-project' }],
+      },
+      {
+        projects: [
+          {
+            ...baseProjectItem,
+            id: 'my-project',
+            relatedTo: ['typescript', 'acme-work'],
+          },
+        ],
+      },
       ...getNullishTestCases(ProjectItemSchema, baseProjectItem).map(
         (testCase) => ({
           projects: [testCase],
@@ -99,6 +111,33 @@ describe('ProjectsSchema', () => {
     for (const project of tests) {
       expect(ProjectsSchema.parse(project)).toStrictEqual(project)
     }
+  })
+
+  it('should reject an invalid id format', () => {
+    validateZodErrors(
+      ProjectsSchema,
+      { projects: [{ name, startDate, summary, id: 'INVALID ID' }] },
+      {
+        errors: [],
+        properties: {
+          projects: {
+            errors: [],
+            items: [
+              {
+                errors: [],
+                properties: {
+                  id: {
+                    errors: [
+                      'id must contain only lowercase letters, digits, and hyphens.',
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      }
+    )
   })
 
   it('should throw an error if a projects object is invalid', () => {

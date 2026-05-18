@@ -26,6 +26,7 @@ import { z } from 'zod'
 import { joinNonEmptyString } from '@/utils'
 import {
   DateSchema,
+  EntityIdSchema,
   multilingualString,
   OrganizationSchema,
   SizedStringSchema,
@@ -74,6 +75,7 @@ export const VolunteerItemSchema = z.object({
   summary: multilingualString(SummarySchema),
 
   // optional fields
+  id: EntityIdSchema.nullish(),
   endDate: nullifySchema(DateSchema('endDate')),
   url: nullifySchema(UrlSchema),
 })

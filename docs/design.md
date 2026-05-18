@@ -544,17 +544,260 @@ content:
 
 ---
 
+## 4. Universal IDs and Cross-References
+
+### Problem
+
+The existing `projects` and `skills` features (§2 and §3) introduced IDs only
+for those two section types, with fixed-direction references (e.g. `work` lists
+project IDs). This is too narrow: users may want to express that a skill is
+related to an award, or that a project is connected to a publication or a
+volunteer experience. There is also no way to link any two arbitrary resume
+entries.
+
+### Goal
+
+- Give **every experience-bearing section item** a stable, optional `id` field:
+  `work`, `volunteer`, `projects`, `references`, `publications`, `certificates`,
+  `awards`, `education`, and `skills`.
+- Add a `relatedTo?: string[]` field to **`ProjectItem`** and **`SkillItem`**
+  that can reference the `id` of **any entity** across the entire resume.
+- A preprocess step resolves the string IDs to their typed entities and stores
+  them in `computed.relatedTo`.
+
+### New type: `RelatedEntity`
+
+```typescript
+// packages/core/src/models/types/content.ts
+type RelatedEntity =
+  | { section: 'awards';        item: AwardItem }
+  | { section: 'certificates';  item: CertificateItem }
+  | { section: 'education';     item: EducationItem }
+  | { section: 'projects';      item: ProjectItem }
+  | { section: 'publications';  item: PublicationItem }
+  | { section: 'references';    item: ReferenceItem }
+  | { section: 'skills';        item: SkillItem }
+  | { section: 'volunteer';     item: VolunteerItem }
+  | { section: 'work';          item: WorkItem }
+```
+
+### Type changes (`packages/core/src/models/types/content.ts`)
+
+Every section item listed gains an optional `id` field:
+
+```typescript
+type WorkItem        = { id?: string; /* existing fields */ }
+type VolunteerItem   = { id?: string; /* existing fields */ }
+type AwardItem       = { id?: string; /* existing fields */ }
+type CertificateItem = { id?: string; /* existing fields */ }
+type EducationItem   = { id?: string; /* existing fields */ }
+type PublicationItem = { id?: string; /* existing fields */ }
+type ReferenceItem   = { id?: string; /* existing fields */ }
+type SkillItem       = { id?: string; /* existing fields */ }
+```
+
+`ProjectItem` gains both `id` and `relatedTo`, and its `computed` block gains
+`relatedTo`:
+
+```typescript
+type ProjectItem = {
+  id?: string
+  relatedTo?: string[]    // NEW — list of any entity IDs across the resume
+  computed?: {
+    // existing computed fields …
+    relatedTo?: RelatedEntity[]  // NEW — resolved entities
+  }
+}
+```
+
+`SkillItem` gains the same:
+
+```typescript
+type SkillItem = {
+  id?: string
+  relatedTo?: string[]    // NEW — list of any entity IDs across the resume
+  computed?: {
+    // existing computed fields …
+    relatedTo?: RelatedEntity[]  // NEW — resolved entities
+  }
+}
+```
+
+### Zod schema: `EntityIdSchema`
+
+Add a shared primitive to `packages/core/src/schema/primitives.ts`:
+
+```typescript
+export const EntityIdSchema = z
+  .string()
+  .regex(/^[a-z0-9-]+$/, { message: 'id must be lowercase alphanumeric with hyphens.' })
+  .meta({ title: 'ID', description: 'A unique entity identifier (kebab-case).' })
+```
+
+Add `id: EntityIdSchema.nullish()` to all nine item schemas and
+`relatedTo: z.array(z.string()).nullish()` to `ProjectItemSchema` and
+`SkillItemSchema`.
+
+### Preprocess step: `resolveRelatedRefs`
+
+```typescript
+export function resolveRelatedRefs(resume: Resume): Resume {
+  // Build a global id → { section, item } map from all nine section types.
+  const entityMap = new Map<string, RelatedEntity>()
+  const sectionEntries: Array<{
+    section: RelatedEntity['section']
+    items: Array<{ id?: string }>
+  }> = [
+    { section: 'awards',        items: resume.content.awards        ?? [] },
+    { section: 'certificates',  items: resume.content.certificates  ?? [] },
+    { section: 'education',     items: resume.content.education      ?? [] },
+    { section: 'projects',      items: resume.content.projects       ?? [] },
+    { section: 'publications',  items: resume.content.publications   ?? [] },
+    { section: 'references',    items: resume.content.references     ?? [] },
+    { section: 'skills',        items: resume.content.skills         ?? [] },
+    { section: 'volunteer',     items: resume.content.volunteer      ?? [] },
+    { section: 'work',          items: resume.content.work           ?? [] },
+  ]
+
+  for (const { section, items } of sectionEntries) {
+    for (const item of items) {
+      if (item.id) {
+        entityMap.set(item.id, { section, item } as RelatedEntity)
+      }
+    }
+  }
+
+  const resolveIds = (ids: string[] | undefined): RelatedEntity[] =>
+    (ids ?? []).map(id => entityMap.get(id)).filter(Boolean) as RelatedEntity[]
+
+  return {
+    ...resume,
+    content: {
+      ...resume.content,
+      projects: resume.content.projects?.map(item => ({
+        ...item,
+        computed: { ...item.computed, relatedTo: resolveIds(item.relatedTo) },
+      })),
+      skills: resume.content.skills?.map(item => ({
+        ...item,
+        computed: { ...item.computed, relatedTo: resolveIds(item.relatedTo) },
+      })),
+    },
+  }
+}
+```
+
+### ID uniqueness
+
+`resolveRelatedRefs` should emit a console warning (not throw) when:
+- Two entities in the same or different sections share the same `id`.
+- A `relatedTo` entry references an ID that does not exist in any section.
+
+### Full example YAML
+
+```yaml
+locale:
+  language: en
+
+content:
+  basics:
+    name: Alex Developer
+
+  skills:
+    - id: typescript
+      name: TypeScript
+      level: Expert
+      relatedTo:
+        - billing-service
+        - acme-work
+
+    - id: react
+      name: React
+      level: Advanced
+      relatedTo:
+        - portfolio-site
+
+  projects:
+    - id: portfolio-site
+      name: Personal Portfolio
+      startDate: "2024-01"
+      summary: Built a personal website to showcase work.
+      relatedTo:
+        - typescript
+        - react
+        - open-source-award
+
+    - id: billing-service
+      name: Billing Microservice
+      startDate: "2023-06"
+      endDate: "2024-01"
+      summary: Designed and built a billing service from scratch.
+      relatedTo:
+        - typescript
+        - acme-work
+
+  work:
+    - id: acme-work
+      name: Acme Corp
+      position: Senior Engineer
+      startDate: "2022-01"
+      summary: Full-stack development across multiple products.
+
+  awards:
+    - id: open-source-award
+      title: Open Source Contributor of the Year
+      awarder: Linux Foundation
+      date: "2023-11"
+      summary: Recognised for sustained contributions.
+
+  education:
+    - id: cs-degree
+      area: Computer Science
+      institution: State University
+      degree: Bachelor
+      startDate: "2016-09"
+      endDate: "2020-05"
+
+  volunteer:
+    - id: osi-volunteer
+      organization: Open Source Initiative
+      position: Contributor
+      startDate: "2021-03"
+      summary: Maintained a React component library.
+
+  certificates:
+    - id: aws-cert
+      name: AWS Solutions Architect
+      issuer: Amazon Web Services
+      date: "2023-06"
+
+  publications:
+    - id: my-paper
+      name: Serverless Billing at Scale
+      publisher: ACM
+      releaseDate: "2024-03"
+      summary: Published research on billing service architecture.
+
+  references:
+    - id: alice-ref
+      name: Alice Manager
+      summary: Excellent engineer with strong leadership skills.
+```
+
+---
+
 ## Preprocess pipeline order
 
-After all three features are implemented, the transform pipeline runs in this
+After all four features are implemented, the transform pipeline runs in this
 order:
 
 1. `resolveMultilingualStrings` — replace `MultilingualString` with plain strings
-2. `resolveProjectRefs` — inject resolved `ProjectItem[]` into work/awards/volunteer/certificates
-3. `resolveSkillRefs` — inject resolved `SkillItem[]` into projects/work/awards/volunteer/certificates
-4. (existing transforms) `normalizeResumeContentSections`, `transformDate`, …
+2. `resolveRelatedRefs` — build global entity map; inject `computed.relatedTo`
+   on projects and skills
+3. (existing transforms) `normalizeResumeContentSections`, `transformDate`, …
 
-Steps 2 and 3 must run after step 1 so they operate on resolved strings.
+Step 2 must run after step 1 so that entity fields are plain strings when
+stored in `computed.relatedTo`.
 
 ---
 
@@ -600,3 +843,22 @@ Steps 2 and 3 must run after step 1 so they operate on resolved strings.
 - [ ] Add unit tests for `resolveSkillRefs`
 - [ ] Add renderer smoke tests
 - [ ] Update `schema.json`
+
+### Universal IDs and cross-references
+- [ ] Add `RelatedEntity` discriminated union type to `models/types/content.ts`
+- [ ] Add `id?: string` to `AwardItem`, `CertificateItem`, `EducationItem`,
+      `PublicationItem`, `ProjectItem`, `ReferenceItem`, `SkillItem`,
+      `VolunteerItem`, `WorkItem` in `models/types/content.ts`
+- [ ] Add `relatedTo?: string[]` + `computed.relatedTo?: RelatedEntity[]` to
+      `ProjectItem` and `SkillItem`
+- [ ] Add `EntityIdSchema` to `schema/primitives.ts`
+- [ ] Add `id: EntityIdSchema.nullish()` to all nine item schemas
+- [ ] Add `relatedTo: z.array(z.string()).nullish()` to `ProjectItemSchema` and
+      `SkillItemSchema`
+- [ ] Add `resolveRelatedRefs` to `preprocess/transform.ts`
+- [ ] Wire `resolveRelatedRefs` as step 2 in the pipeline (after
+      `resolveMultilingualStrings`)
+- [ ] Add unit tests for `resolveRelatedRefs`
+- [ ] Add schema tests for `id` and `relatedTo` in each section
+- [ ] Update `schema.json` via `pnpm core build`
+- [ ] Create `docs/entity_diagram.puml` entity relationship diagram

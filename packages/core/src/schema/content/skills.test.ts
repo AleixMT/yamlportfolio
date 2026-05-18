@@ -68,6 +68,14 @@ describe('SkillsSchema', () => {
           },
         ],
       },
+      {
+        skills: [{ ...baseSkillItem, id: 'javascript' }],
+      },
+      {
+        skills: [
+          { ...baseSkillItem, id: 'javascript', relatedTo: ['my-project'] },
+        ],
+      },
       ...getNullishTestCases(SkillItemSchema, baseSkillItem).map(
         (testCase) => ({
           skills: [testCase],
@@ -78,6 +86,33 @@ describe('SkillsSchema', () => {
     for (const skills of tests) {
       expect(SkillsSchema.parse(skills)).toStrictEqual(skills)
     }
+  })
+
+  it('should reject an invalid id format', () => {
+    validateZodErrors(
+      SkillsSchema,
+      { skills: [{ name, level, id: 'INVALID_ID' }] },
+      {
+        errors: [],
+        properties: {
+          skills: {
+            errors: [],
+            items: [
+              {
+                errors: [],
+                properties: {
+                  id: {
+                    errors: [
+                      'id must contain only lowercase letters, digits, and hyphens.',
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      }
+    )
   })
 
   it('should throw an error if the skills object is invalid', () => {

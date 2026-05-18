@@ -26,6 +26,7 @@ import { z } from 'zod'
 import { joinNonEmptyString } from '@/utils'
 import {
   EmailSchema,
+  EntityIdSchema,
   multilingualString,
   NameSchema,
   PhoneSchema,
@@ -63,6 +64,7 @@ export const ReferenceItemSchema = z.object({
   summary: multilingualString(SummarySchema),
 
   // optional fields
+  id: EntityIdSchema.nullish(),
   email: nullifySchema(EmailSchema),
   phone: nullifySchema(PhoneSchema),
   relationship: nullifySchema(RelationshipSchema),

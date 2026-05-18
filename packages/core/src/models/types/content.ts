@@ -33,11 +33,30 @@ import type {
 } from './options'
 
 /**
+ * A discriminated union of all entities that can be referenced via `relatedTo`.
+ *
+ * Each variant carries the section name and the resolved item so that renderers
+ * can type-safely access the entity data without additional lookups.
+ */
+export type RelatedEntity =
+  | { section: 'awards'; item: AwardItem }
+  | { section: 'certificates'; item: CertificateItem }
+  | { section: 'education'; item: EducationItem }
+  | { section: 'projects'; item: ProjectItem }
+  | { section: 'publications'; item: PublicationItem }
+  | { section: 'references'; item: ReferenceItem }
+  | { section: 'skills'; item: SkillItem }
+  | { section: 'volunteer'; item: VolunteerItem }
+  | { section: 'work'; item: WorkItem }
+
+/**
  * Represents a single award, honor, or recognition received.
  *
  * @see {@link awardItemSchema} for its schema constraints.
  */
 type AwardItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** The organization or entity that gave the award. */
   awarder: string
   /** The name or title of the award. */
@@ -112,6 +131,8 @@ export type Basics = {
  * @see {@link certificateItemSchema} for its schema constraints.
  */
 type CertificateItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** The organization that issued the certificate. */
   issuer: string
   /** The name of the certificate. */
@@ -145,6 +166,8 @@ export type Certificates = {
  * @see {@link educationItemSchema} for its schema constraints.
  */
 type EducationItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Area of study (e.g., "Computer Science"). */
   area: string
   /** The type of degree obtained. */
@@ -328,6 +351,8 @@ export type Profiles = {
  * @see {@link projectItemSchema} for its schema constraints.
  */
 type ProjectItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Name of the project. */
   name: string
   /** Start date of the project (e.g., "2021", "Jan 2021"). */
@@ -341,10 +366,12 @@ type ProjectItem = {
   endDate?: string
   /** Keywords or technologies used in the project. */
   keywords?: Keywords
+  /** IDs of any entities across the resume this project is related to. */
+  relatedTo?: string[]
   /** URL related to the project (e.g., repository, live demo). */
   url?: string
-  /** Computed values derived during transformation. */
 
+  /** Computed values derived during transformation. */
   computed?: {
     /** Combined string representing the date range. */
     dateRange: string
@@ -356,6 +383,8 @@ type ProjectItem = {
     endDate: string
     /** Transformed summary string (e.g., LaTeX code). */
     summary: string
+    /** Resolved entities referenced by relatedTo IDs. */
+    relatedTo?: RelatedEntity[]
   }
 }
 
@@ -375,6 +404,8 @@ export type Projects = {
  * @see {@link publicationItemSchema} for its schema constraints.
  */
 type PublicationItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Name or title of the publication. */
   name: string
   /** Publisher of the work. */
@@ -412,6 +443,8 @@ export type Publications = {
  * @see {@link referenceItemSchema} for its schema constraints.
  */
 type ReferenceItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Name of the reference. */
   name: string
   /** A brief note about the reference. */
@@ -447,6 +480,8 @@ export type References = {
  * @see {@link skillItemSchema} for its schema constraints.
  */
 type SkillItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Proficiency level in the skill. */
   level: Level
   /** Name of the skill. */
@@ -454,6 +489,8 @@ type SkillItem = {
 
   /** Specific keywords or technologies related to the skill. */
   keywords?: Keywords
+  /** IDs of any entities across the resume this skill is related to. */
+  relatedTo?: string[]
 
   /** Computed values derived during transformation. */
   computed?: {
@@ -461,6 +498,8 @@ type SkillItem = {
     level: string
     /** Transformed keywords string. */
     keywords: string
+    /** Resolved entities referenced by relatedTo IDs. */
+    relatedTo?: RelatedEntity[]
   }
 }
 
@@ -480,6 +519,8 @@ export type Skills = {
  * @see {@link volunteerItemSchema} for its schema constraints.
  */
 type VolunteerItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Name of the organization. */
   organization: string
   /** Role or position held. */
@@ -523,6 +564,8 @@ export type Volunteer = {
  * @see {@link workItemSchema} for its schema constraints.
  */
 type WorkItem = {
+  /** Unique identifier for cross-referencing this item (kebab-case). */
+  id?: string
   /** Name of the company or employer. */
   name: string
   /** Job title or position held. */

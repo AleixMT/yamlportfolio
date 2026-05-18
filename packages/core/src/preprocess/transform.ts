@@ -33,6 +33,7 @@ import {
   DEFAULT_RESUME_LOCALE,
   FILLED_RESUME_CONTENT,
   type LocaleLanguage,
+  type RelatedEntity,
   type Resume,
   type SectionID,
 } from '@/models'
@@ -146,6 +147,86 @@ export function resolveMultilingualStrings(resume: Resume): Resume {
     content[section]?.forEach((item: Record<string, unknown>) => {
       resolveItemMultilingualFields(item, language)
     })
+  }
+
+  return cloned
+}
+
+/**
+ * Builds a global entity map from all nine section types and injects resolved
+ * `RelatedEntity[]` arrays into `computed.relatedTo` on every project and skill
+ * that has a non-empty `relatedTo` list.
+ *
+ * Must run after `resolveMultilingualStrings` so the entity items already
+ * contain plain strings.
+ *
+ * Emits console warnings for duplicate IDs and unresolved references without
+ * throwing, so the rest of the pipeline continues regardless.
+ *
+ * @param resume - The resume object.
+ * @returns A new resume object with `computed.relatedTo` populated.
+ */
+export function resolveRelatedRefs(resume: Resume): Resume {
+  const cloned = cloneDeep(resume)
+  const { content } = cloned
+
+  const entityMap = new Map<string, RelatedEntity>()
+
+  const sectionEntries: Array<{
+    section: RelatedEntity['section']
+    items: Array<{ id?: string | null }>
+  }> = [
+    { section: 'awards', items: content.awards ?? [] },
+    { section: 'certificates', items: content.certificates ?? [] },
+    { section: 'education', items: content.education ?? [] },
+    { section: 'projects', items: content.projects ?? [] },
+    { section: 'publications', items: content.publications ?? [] },
+    { section: 'references', items: content.references ?? [] },
+    { section: 'skills', items: content.skills ?? [] },
+    { section: 'volunteer', items: content.volunteer ?? [] },
+    { section: 'work', items: content.work ?? [] },
+  ]
+
+  for (const { section, items } of sectionEntries) {
+    for (const item of items) {
+      if (!item.id) continue
+      if (entityMap.has(item.id)) {
+        console.warn(
+          `[resolveRelatedRefs] Duplicate entity id "${item.id}" in section "${section}". Only the first occurrence is used.`
+        )
+        continue
+      }
+      entityMap.set(item.id, { section, item } as RelatedEntity)
+    }
+  }
+
+  const resolveIds = (ids: string[] | null | undefined): RelatedEntity[] => {
+    if (!ids) return []
+    return ids.reduce<RelatedEntity[]>((acc, id) => {
+      const entity = entityMap.get(id)
+      if (!entity) {
+        console.warn(
+          `[resolveRelatedRefs] Entity id "${id}" referenced in relatedTo was not found.`
+        )
+        return acc
+      }
+      acc.push(entity)
+      return acc
+    }, [])
+  }
+
+  if (content.projects) {
+    content.projects = content.projects.map((item) => ({
+      ...item,
+      computed: { ...item.computed, relatedTo: resolveIds(item.relatedTo) },
+    }))
+  }
+
+  if (content.skills) {
+    content.skills = content.skills.map((item) => ({
+      ...item,
+      computed: { ...item.computed, relatedTo: resolveIds(item.relatedTo) },
+    }))
   }
 
   return cloned
@@ -275,16 +356,19 @@ export function transformResumeValues(
 }
 
 /**
- * Transform all values in `computed` field with `escapeFunc`.
+ * Transform all string values in `computed` field with `escapeFunc`.
+ * Non-string values (e.g. the `relatedTo` resolved-entity array) are skipped.
  */
 function transformResumeSectionComputedValues(
   sectionResumeComputed: {
-    [key: string]: string
+    [key: string]: unknown
   },
   escapeFunc: (input: string) => string
 ): void {
   Object.entries(sectionResumeComputed).forEach(([key, value]) => {
-    sectionResumeComputed[key] = escapeFunc(value)
+    if (typeof value === 'string') {
+      sectionResumeComputed[key] = escapeFunc(value)
+    }
   })
 }
 
@@ -809,6 +893,7 @@ export function transformResumeContent(
 ): Resume {
   return [
     resolveMultilingualStrings,
+    resolveRelatedRefs,
     normalizedResumeContent,
     // The order of the following functions matters, `transformResumeValues`
     // should be called as the first transformXXX function to process all leaf

@@ -26,6 +26,7 @@ import { z } from 'zod'
 import { joinNonEmptyString } from '@/utils'
 import {
   DateSchema,
+  EntityIdSchema,
   multilingualString,
   NameSchema,
   OrganizationSchema,
@@ -53,6 +54,7 @@ export const CertificateItemSchema = z.object({
   ),
 
   // optional fields
+  id: EntityIdSchema.nullish(),
   date: nullifySchema(DateSchema('date')),
   url: nullifySchema(UrlSchema),
 })

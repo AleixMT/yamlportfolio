@@ -214,6 +214,24 @@
                   "2025-02-02T00:00:03.123Z"
                 ]
               },
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$",
+                    "title": "ID",
+                    "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                    "examples": [
+                      "my-project",
+                      "typescript",
+                      "acme-work-2023"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "courses": {
                 "title": "[optional] Courses",
                 "description": "A list of relevant courses you have taken or `null`.",
@@ -429,6 +447,24 @@
                       }
                     ]
                   },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "date": {
                     "title": "[optional] Date",
                     "description": "A valid date string that can be parsed by `Date.parse` or `null`.",
@@ -540,6 +576,24 @@
                         "additionalProperties": {
                           "type": "string"
                         }
+                      }
+                    ]
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1371,6 +1425,24 @@
                       }
                     ]
                   },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "description": {
                     "anyOf": [
                       {
@@ -1463,6 +1535,19 @@
                       }
                     ]
                   },
+                  "relatedTo": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "url": {
                     "title": "[optional] URL",
                     "description": "A valid URL with maximum length of 256 characters or `null`.",
@@ -1544,6 +1629,24 @@
                       "IEEE",
                       "Springer",
                       "Nature Publishing Group"
+                    ]
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "releaseDate": {
@@ -1668,6 +1771,24 @@
                         "additionalProperties": {
                           "type": "string"
                         }
+                      }
+                    ]
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1798,6 +1919,24 @@
                       }
                     ]
                   },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "keywords": {
                     "title": "[optional] Keywords",
                     "description": "An array of keyword, each between 1 and 32 characters or `null`.",
@@ -1822,6 +1961,19 @@
                         "title": "[optional] Keywords",
                         "description": "An array of keyword, each between 1 and 32 characters or `null`.",
                         "$ref": "#/$defs/keywords"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relatedTo": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       {
                         "type": "null"
@@ -1916,6 +2068,24 @@
                         "additionalProperties": {
                           "type": "string"
                         }
+                      }
+                    ]
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -2060,6 +2230,24 @@
                         "additionalProperties": {
                           "type": "string"
                         }
+                      }
+                    ]
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9-]+$",
+                        "title": "ID",
+                        "description": "A unique entity identifier using lowercase letters, digits, and hyphens (kebab-case).",
+                        "examples": [
+                          "my-project",
+                          "typescript",
+                          "acme-work-2023"
+                        ]
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },

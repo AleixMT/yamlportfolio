@@ -26,6 +26,7 @@ import { z } from 'zod'
 import { joinNonEmptyString } from '@/utils'
 import {
   DateSchema,
+  EntityIdSchema,
   multilingualString,
   NameSchema,
   OrganizationSchema,
@@ -60,6 +61,7 @@ export const AwardItemSchema = z.object({
   title: multilingualString(TitleSchema),
 
   // optional fields
+  id: EntityIdSchema.nullish(),
   date: nullifySchema(DateSchema('date')),
   summary: multilingualString(SummarySchema).nullish(),
 })
