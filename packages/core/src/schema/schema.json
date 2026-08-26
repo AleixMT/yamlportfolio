@@ -1967,7 +1967,7 @@
                       }
                     ]
                   },
-                  "relatedTo": {
+                  "usedIn": {
                     "anyOf": [
                       {
                         "type": "array",

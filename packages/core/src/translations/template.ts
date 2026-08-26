@@ -32,7 +32,7 @@ export const PUNCTUATIONS = ['comma', 'colon', 'separator'] as const
 export type Punctuation = (typeof PUNCTUATIONS)[number]
 
 /** Specific terms used within the template structure that need translation. */
-export const TERMS = ['courses', 'keywords', 'score'] as const
+export const TERMS = ['courses', 'keywords', 'relatedTo', 'score'] as const
 
 /** The type of term. */
 export type Term = (typeof TERMS)[number]
@@ -71,6 +71,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Courses',
         keywords: 'Keywords',
+        relatedTo: 'Related',
         score: 'Score',
       },
     },
@@ -83,6 +84,7 @@ export function getTemplateTranslations(
       terms: {
         courses: '课程',
         keywords: '关键字',
+        relatedTo: '相关',
         score: '成绩',
       },
     },
@@ -95,6 +97,7 @@ export function getTemplateTranslations(
       terms: {
         courses: '課程',
         keywords: '關鍵字',
+        relatedTo: '相關',
         score: '成績',
       },
     },
@@ -107,6 +110,7 @@ export function getTemplateTranslations(
       terms: {
         courses: '課程',
         keywords: '關鍵字',
+        relatedTo: '相關',
         score: '成績',
       },
     },
@@ -119,6 +123,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Cursos',
         keywords: 'Palabras clave',
+        relatedTo: 'Relacionado',
         score: 'Puntuación',
       },
     },
@@ -131,6 +136,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Cours',
         keywords: 'Mots-clés',
+        relatedTo: 'Connexe',
         score: 'Score',
       },
     },
@@ -143,6 +149,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Kurs',
         keywords: 'Nøkkelord',
+        relatedTo: 'Relatert',
         score: 'Poeng',
       },
     },
@@ -155,6 +162,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Cursussen',
         keywords: 'Trefwoorden',
+        relatedTo: 'Gerelateerd',
         score: 'Score',
       },
     },
@@ -167,6 +175,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'コース',
         keywords: 'キーワード',
+        relatedTo: '関連',
         score: '成績',
       },
     },
@@ -179,6 +188,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Kurse',
         keywords: 'Schlüsselwörter',
+        relatedTo: 'Verwandt',
         score: 'Punkte',
       },
     },
@@ -191,6 +201,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Mata Kuliah',
         keywords: 'Kata Kunci',
+        relatedTo: 'Terkait',
         score: 'Nilai',
       },
     },
@@ -203,6 +214,7 @@ export function getTemplateTranslations(
       terms: {
         courses: 'Cursos',
         keywords: 'Paraules clau',
+        relatedTo: 'Relacionat',
         score: 'Puntuació',
       },
     },

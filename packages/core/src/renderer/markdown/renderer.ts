@@ -322,10 +322,16 @@ ${languages
     return `## ${sectionNames.skills}
 
 ${skills
-  .map(({ name, computed: { level, keywords } }) => {
+  .map(({ name, computed: { level, keywords, usedIn } }) => {
+    const usedInNames = (usedIn ?? [])
+      .map(Renderer.getRelatedEntityName)
+      .join(', ')
     return `- ${name}${colon}${level}${showIfNotEmpty(
       keywords,
       `${comma}${terms.keywords}${colon}${keywords}`
+    )}${showIfNotEmpty(
+      usedInNames,
+      `${comma}${terms.relatedTo}${colon}${usedInNames}`
     )}`
   })
   .join('\n')}`
@@ -490,12 +496,13 @@ ${references
 ${projects
   .map(
     ({
-      computed: { dateRange, keywords, startDate },
+      computed: { dateRange, keywords, startDate, usedBySkills },
       name,
       summary,
       description,
       url,
     }) => {
+      const skillNames = (usedBySkills ?? []).join(', ')
       return joinNonEmptyString([
         `### ${name}`,
         joinNonEmptyString(
@@ -504,6 +511,10 @@ ${projects
         ),
         showIfNotEmpty(url, `URL${colon}${url}`),
         showIfNotEmpty(keywords, `${terms.keywords}${colon}${keywords}`),
+        showIfNotEmpty(
+          skillNames,
+          `${sectionNames.skills}${colon}${skillNames}`
+        ),
         showIfNotEmpty(summary, `Summary${colon}\n${summary}`),
       ])
     }

@@ -505,13 +505,18 @@ ${languages
     return `\\section{${sectionNames.skills}}
 
 ${skills
-  .map(
-    ({ name, computed: { level, keywords } }) =>
-      `\\cvline{${name}}{${level}${showIfNotEmpty(
-        keywords,
-        ` \\hfill \\textbf{${terms.keywords}}${colon}${keywords}`
-      )}}`
-  )
+  .map(({ name, computed: { level, keywords, usedIn } }) => {
+    const usedInNames = (usedIn ?? [])
+      .map(LatexRenderer.getRelatedEntityName)
+      .join(', ')
+    return `\\cvline{${name}}{${level}${showIfNotEmpty(
+      keywords,
+      ` \\hfill \\textbf{${terms.keywords}}${colon}${keywords}`
+    )}${showIfNotEmpty(
+      usedInNames,
+      ` \\hfill \\textbf{${terms.relatedTo}}${colon}${usedInNames}`
+    )}}`
+  })
   .join('\n')}`
   }
 
@@ -706,14 +711,18 @@ ${projects
       name,
       description,
       url,
-      computed: { dateRange, startDate, summary, keywords },
-    }) => `\\cventry{${showIfNotEmpty(startDate, dateRange)}}
+      computed: { dateRange, startDate, summary, keywords, usedBySkills },
+    }) => {
+      const skillNames = (usedBySkills ?? []).join(', ')
+      return `\\cventry{${showIfNotEmpty(startDate, dateRange)}}
         {${description}}
         {${this.renderLinkedText(name, url)}}
         {${this.renderUrl(url)}}
         {}
         {${showIf(
-          !isEmptyValue(summary) || !isEmptyValue(keywords),
+          !isEmptyValue(summary) ||
+            !isEmptyValue(keywords) ||
+            !isEmptyValue(skillNames),
           `${joinNonEmptyString(
             [
               summary,
@@ -721,10 +730,15 @@ ${projects
                 !isEmptyValue(keywords),
                 `\\textbf{${terms.keywords}}${colon}${keywords}`
               ),
+              showIf(
+                !isEmptyValue(skillNames),
+                `\\textbf{${computed.sectionNames.skills}}${colon}${skillNames}`
+              ),
             ],
             '\n'
           )}`
         )}}`
+    }
   )
   .join('\n\n')}`
   }

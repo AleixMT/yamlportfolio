@@ -51,7 +51,7 @@ export const SkillItemSchema = z.object({
   // optional fields
   id: EntityIdSchema.nullish(),
   keywords: nullifySchema(KeywordsSchema),
-  relatedTo: z.array(z.string()).nullish(),
+  usedIn: z.array(z.string()).nullish(),
 })
 
 /**

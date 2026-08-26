@@ -225,7 +225,27 @@ export function resolveRelatedRefs(resume: Resume): Resume {
   if (content.skills) {
     content.skills = content.skills.map((item) => ({
       ...item,
-      computed: { ...item.computed, relatedTo: resolveIds(item.relatedTo) },
+      computed: { ...item.computed, usedIn: resolveIds(item.usedIn) },
+    }))
+  }
+
+  // Build reverse map: projectId → skill names for projects.computed.usedBySkills
+  const projectIdToSkillNames = new Map<string, string[]>()
+  for (const skill of content.skills ?? []) {
+    for (const id of skill.usedIn ?? []) {
+      const existing = projectIdToSkillNames.get(id) ?? []
+      existing.push(skill.name)
+      projectIdToSkillNames.set(id, existing)
+    }
+  }
+
+  if (content.projects) {
+    content.projects = content.projects.map((item) => ({
+      ...item,
+      computed: {
+        ...item.computed,
+        usedBySkills: item.id ? (projectIdToSkillNames.get(item.id) ?? []) : [],
+      },
     }))
   }
 
@@ -357,7 +377,7 @@ export function transformResumeValues(
 
 /**
  * Transform all string values in `computed` field with `escapeFunc`.
- * Non-string values (e.g. the `relatedTo` resolved-entity array) are skipped.
+ * Non-string values (e.g. the `relatedTo`/`usedIn` resolved-entity arrays) are skipped.
  */
 function transformResumeSectionComputedValues(
   sectionResumeComputed: {
@@ -400,7 +420,7 @@ function transformResumeSectionValues(
       return
     }
 
-    if (['courses', 'keywords'].includes(key)) {
+    if (['courses', 'keywords', 'relatedTo', 'usedIn'].includes(key)) {
       sectionResumeItem[key] = (value as string[]).map((item) => {
         return escapeFunc(item)
       })

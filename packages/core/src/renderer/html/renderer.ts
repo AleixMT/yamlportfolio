@@ -544,28 +544,43 @@ ${this.getStyles()}
       terms,
     } = getTemplateTranslations(locale?.language)
 
-    const skillItems = skills.map(({ name, computed: { level, keywords } }) =>
-      joinNonEmptyString(
-        [
-          '<div class="resume-skill-item">',
-          `<div class="resume-skill-name">${name}${showIfNotEmpty(
-            level,
-            `<span class="resume-skill-level">${colon}${level}</span>`
-          )}</div>`,
-          showIfNotEmpty(
-            keywords,
-            joinNonEmptyString(
-              [
-                '<div><div class="resume-labeled-list"><span>',
-                `${terms.keywords}</span>${colon}${keywords}</div></div>`,
-              ],
-              ''
-            )
-          ),
-          '</div>',
-        ],
-        '\n'
-      )
+    const skillItems = skills.map(
+      ({ name, computed: { level, keywords, usedIn } }) => {
+        const usedInNames = (usedIn ?? [])
+          .map(Renderer.getRelatedEntityName)
+          .join(', ')
+        return joinNonEmptyString(
+          [
+            '<div class="resume-skill-item">',
+            `<div class="resume-skill-name">${name}${showIfNotEmpty(
+              level,
+              `<span class="resume-skill-level">${colon}${level}</span>`
+            )}</div>`,
+            showIfNotEmpty(
+              keywords,
+              joinNonEmptyString(
+                [
+                  '<div><div class="resume-labeled-list"><span>',
+                  `${terms.keywords}</span>${colon}${keywords}</div></div>`,
+                ],
+                ''
+              )
+            ),
+            showIfNotEmpty(
+              usedInNames,
+              joinNonEmptyString(
+                [
+                  '<div><div class="resume-labeled-list"><span>',
+                  `${terms.relatedTo}</span>${colon}${usedInNames}</div></div>`,
+                ],
+                ''
+              )
+            ),
+            '</div>',
+          ],
+          '\n'
+        )
+      }
     )
 
     return `<section class="resume-section" data-section="skills">
@@ -833,9 +848,10 @@ ${this.getStyles()}
         name,
         description,
         url,
-        computed: { dateRange, summary, keywords } = {},
+        computed: { dateRange, summary, keywords, usedBySkills } = {},
       }) => {
         const projectTitle = url ? `<a href="${url}">${name}</a>` : name
+        const skillNames = (usedBySkills ?? []).join(', ')
 
         return joinNonEmptyString(
           [
@@ -865,6 +881,12 @@ ${this.getStyles()}
               `<div class="resume-labeled-list"><span>${
                 terms.keywords
               }</span>${colon} ${keywords}</div>`
+            ),
+            showIfNotEmpty(
+              skillNames,
+              `<div class="resume-labeled-list"><span>${
+                sectionNames.skills
+              }</span>${colon} ${skillNames}</div>`
             ),
             '</div>',
           ],

@@ -1612,7 +1612,7 @@ describe(resolveRelatedRefs, () => {
           id: 'typescript',
           name: 'TypeScript',
           level: 'Expert',
-          relatedTo: ['my-project', 'acme-work'],
+          usedIn: ['my-project', 'acme-work'],
         },
       ],
       projects: [
@@ -1646,19 +1646,26 @@ describe(resolveRelatedRefs, () => {
     })
   })
 
-  it('should inject computed.relatedTo on skills with resolved entities', () => {
+  it('should inject computed.usedIn on skills with resolved entities', () => {
     const result = resolveRelatedRefs(baseResume)
     const skill = result.content.skills?.[0]
 
-    expect(skill?.computed?.relatedTo).toHaveLength(2)
-    expect(skill?.computed?.relatedTo?.[0]).toMatchObject({
+    expect(skill?.computed?.usedIn).toHaveLength(2)
+    expect(skill?.computed?.usedIn?.[0]).toMatchObject({
       section: 'projects',
       item: expect.objectContaining({ id: 'my-project' }),
     })
-    expect(skill?.computed?.relatedTo?.[1]).toMatchObject({
+    expect(skill?.computed?.usedIn?.[1]).toMatchObject({
       section: 'work',
       item: expect.objectContaining({ id: 'acme-work' }),
     })
+  })
+
+  it('should inject computed.usedBySkills on projects from skills usedIn', () => {
+    const result = resolveRelatedRefs(baseResume)
+    const project = result.content.projects?.[0]
+
+    expect(project?.computed?.usedBySkills).toEqual(['TypeScript'])
   })
 
   it('should return empty relatedTo when no relatedTo field is set', () => {
@@ -1685,6 +1692,7 @@ describe(resolveRelatedRefs, () => {
 
     const result = resolveRelatedRefs(resume)
     expect(result.content.projects?.[0]?.computed?.relatedTo).toEqual([])
+    expect(result.content.projects?.[0]?.computed?.usedBySkills).toEqual([])
   })
 
   it('should warn and skip duplicate entity ids', () => {

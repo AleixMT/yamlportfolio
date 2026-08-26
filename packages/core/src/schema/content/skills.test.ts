@@ -73,7 +73,7 @@ describe('SkillsSchema', () => {
       },
       {
         skills: [
-          { ...baseSkillItem, id: 'javascript', relatedTo: ['my-project'] },
+          { ...baseSkillItem, id: 'javascript', usedIn: ['my-project'] },
         ],
       },
       ...getNullishTestCases(SkillItemSchema, baseSkillItem).map(

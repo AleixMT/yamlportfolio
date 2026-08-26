@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import type { OrderableSectionID, Resume } from '@/models'
+import type { OrderableSectionID, RelatedEntity, Resume } from '@/models'
 import { DEFAULT_SECTIONS_ORDER } from '@/models'
 import { joinNonEmptyString, mergeArrayWithOrder } from '@/utils'
 
@@ -187,6 +187,34 @@ abstract class Renderer {
    * @returns {string} The rendered resume
    */
   abstract render(): string
+
+  /**
+   * Returns the display name for a resolved related entity.
+   *
+   * Used by renderers to convert a `RelatedEntity` into a human-readable label.
+   */
+  static getRelatedEntityName(entity: RelatedEntity): string {
+    switch (entity.section) {
+      case 'awards':
+        return entity.item.title
+      case 'certificates':
+        return entity.item.name
+      case 'education':
+        return entity.item.institution
+      case 'projects':
+        return entity.item.name
+      case 'publications':
+        return entity.item.name
+      case 'references':
+        return entity.item.name
+      case 'skills':
+        return entity.item.name
+      case 'volunteer':
+        return entity.item.organization
+      case 'work':
+        return entity.item.name
+    }
+  }
 
   /**
    * Render sections in the specified order.

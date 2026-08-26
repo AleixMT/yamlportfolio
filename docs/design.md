@@ -295,7 +295,7 @@ duplicate the information in free-text `keywords` or `summary` fields.
 
 ### Goal
 
-Give each skill entry a stable `id`. Any experience-bearing section item
+Give each skill entry a stable `id`. Any project section item
 (`projects`, `work`, `awards`, `volunteer`, `certificates`) can then declare
 which skill IDs it involved. Renderers render the resolved skill names (and
 optionally levels) alongside each entry.

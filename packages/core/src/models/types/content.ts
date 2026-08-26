@@ -385,6 +385,8 @@ type ProjectItem = {
     summary: string
     /** Resolved entities referenced by relatedTo IDs. */
     relatedTo?: RelatedEntity[]
+    /** Names of skills whose usedIn list includes this project's ID. */
+    usedBySkills?: string[]
   }
 }
 
@@ -489,8 +491,8 @@ type SkillItem = {
 
   /** Specific keywords or technologies related to the skill. */
   keywords?: Keywords
-  /** IDs of any entities across the resume this skill is related to. */
-  relatedTo?: string[]
+  /** IDs of entities (projects, work, etc.) where this skill was used. */
+  usedIn?: string[]
 
   /** Computed values derived during transformation. */
   computed?: {
@@ -498,8 +500,8 @@ type SkillItem = {
     level: string
     /** Transformed keywords string. */
     keywords: string
-    /** Resolved entities referenced by relatedTo IDs. */
-    relatedTo?: RelatedEntity[]
+    /** Resolved entities referenced by usedIn IDs. */
+    usedIn?: RelatedEntity[]
   }
 }
 
